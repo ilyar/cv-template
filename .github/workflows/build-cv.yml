@@ -1,0 +1,53 @@
+name: build-cv
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build and validate in dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: make ci && make pdf xp=5 && make pdf xp=full
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cv
+          path: cv-*.pdf
+
+      - name: Generate supply chain attestation
+        if: ${{ github.event.repository.private != true }}
+        uses: actions/attest@v4
+        with:
+          subject-path: cv-*.pdf
+
+      - name: Compute release tag
+        id: release_tag
+        run: echo "tag=$(date -u +v%Y.%m.%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" cv-*.pdf --clobber
+          else
+            gh release create "$RELEASE_TAG" cv-*.pdf \
+              --title "$RELEASE_TAG" \
+              --notes "Automated release for $RELEASE_TAG."
+          fi

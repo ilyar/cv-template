@@ -1,0 +1,94 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[a4paper,margin=0.55in]{geometry}
+\usepackage{fontspec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{ragged2e}
+\pagestyle{empty}
+
+\setmainfont{JetBrains Mono}[Scale=0.94]
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\emergencystretch=3em
+\Urlmuskip=0mu plus 2mu
+\definecolor{accent}{HTML}{2F80ED}
+\definecolor{text}{HTML}{202124}
+\definecolor{muted}{HTML}{6B7280}
+\color{text}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.2em,topsep=0.2em,parsep=0pt,partopsep=0pt}
+
+\newcommand{\sectiontitle}[1]{%
+  \vspace{0.42em}%
+  {\fontsize{10.2}{10.2}\selectfont\bfseries\MakeUppercase{#1}}\par
+  \vspace{0.18em}\hrule height 0.85pt\vspace{0.52em}}
+\newcommand{\entrymeta}[1]{{\footnotesize\color{muted}\RaggedRight #1}}
+\newcommand{\contactline}[1]{{\fontsize{7.8}{9.6}\selectfont\color{muted}\RaggedRight #1}}
+\newcommand{\iconglyph}[2][1.08em]{\raisebox{-0.12em}{\includegraphics[width=#1]{#2}}}
+\newcommand{\inlineicon}[1]{\raisebox{-0.10em}{\includegraphics[width=0.96em]{#1}}}
+\newcommand{\contactplain}[2]{\mbox{\iconglyph{#1}\hspace{0.40em}{#2}}}
+\newcommand{\contactitem}[3]{\href{#2}{\mbox{\iconglyph{#1}\hspace{0.40em}{#3}}}}
+\newcommand{\actionitem}[3]{\href{#2}{\tikz[baseline=-0.58ex]{\node[rounded corners=5pt,fill=accent!10,draw=accent!28,text=accent,inner xsep=7.0pt,inner ysep=3.3pt,font=\bfseries\fontsize{6.8}{6.8}\selectfont]{\iconglyph[0.88em]{#1}\hspace{0.46em}#3};}}}
+\newcommand{\experienceentry}[4]{%
+  {\bfseries #1}\par
+  {\color{accent}\bfseries #2}\par
+  \if\relax\detokenize{#3}\relax\else\entrymeta{#3}\par\fi
+  \vspace{0.12em}
+  {\fontsize{7.15}{8.5}\selectfont\RaggedRight #4}\par\vspace{0.34em}}
+\newcommand{\compactentry}[4]{%
+  {\fontsize{6.2}{7.0}\selectfont\RaggedRight\textbf{#1} \textbar{} #2%
+   \if\relax\detokenize{#3}\relax\else\ \textbar{} {\color{muted}#3}\fi%
+   \if\relax\detokenize{#4}\relax\else\ \textbar{} #4\fi}\par\vspace{0.12em}}
+\newcommand{\compactentrywide}[4]{%
+  {\fontsize{6.45}{7.45}\selectfont\RaggedRight
+   \textbf{#1} \textbar{} #2%
+   \if\relax\detokenize{#3}\relax\else\ \textbar{} {\color{muted}#3}\fi\par
+   \if\relax\detokenize{#4}\relax\else {\fontsize{6.25}{7.2}\selectfont #4}\fi}\par\vspace{0.18em}}
+\newcommand{\educationentry}[4]{%
+  {\bfseries #1}\par
+  {\color{accent}\bfseries #2}\par
+  \entrymeta{#3}\par
+  {\fontsize{7.2}{8.5}\selectfont\RaggedRight #4}\par}
+\newcommand{\achievemententry}[2]{%
+  {\bfseries #1}\par
+  {\fontsize{7.15}{8.45}\selectfont\RaggedRight #2}\par\vspace{0.34em}}
+\newenvironment{resumebullets}{%
+  \begin{itemize}[leftmargin=1.05em,itemsep=0.1em,topsep=0.1em,parsep=0pt,partopsep=0pt]
+}{%
+  \end{itemize}
+}
+\newcommand{\photocircle}[1]{%
+  \begin{tikzpicture}[baseline=(current bounding box.center)]
+    \clip (0,0) circle (2.25cm);
+    \node at (0,0) {\includegraphics[width=4.49cm,height=4.49cm]{#1}};
+    \draw[accent!55,line width=0.8pt] (0,0) circle (2.25cm);
+  \end{tikzpicture}}
+
+\hypersetup{pdfauthor={[[PDF_AUTHOR]]}, pdftitle={[[PDF_TITLE]]}}
+
+\begin{document}
+
+\begin{minipage}[t]{0.68\textwidth}
+  {\fontsize{21}{22}\selectfont\bfseries [[NAME]]}\par
+  \vspace{0.18em}
+  {\fontsize{11}{12}\selectfont\bfseries\color{accent} [[TITLE]]}\par
+  \vspace{0.40em}
+  \contactline{[[CONTACT_LINE]]}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.27\textwidth}
+  \raggedleft
+  \vspace{-0.79cm}
+  [[AVATAR]]
+\end{minipage}
+
+\vspace{0.6em}
+
+[[BODY_LAYOUT]]
+
+\end{document}

@@ -1,0 +1,17 @@
+{
+  "name": "cv-template",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.makefile-tools",
+        "James-Yu.latex-workshop"
+      ]
+    }
+  },
+  "postCreateCommand": "make doctor"
+}
