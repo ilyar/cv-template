@@ -172,7 +172,8 @@ function icon_name_for_link(url, kind,   k, d) {
   if (k == "medium") return "medium"
   if (k == "stackoverflow" || k == "stackexchange") return "stackoverflow"
   if (k == "website" || k == "site" || k == "portfolio" || k == "blog" || k == "homepage") return "world"
-  if (k == "devpost" || k == "dorahacks") return "external"
+  if (k == "devpost") return "devpost"
+  if (k == "dorahacks") return "dorahacks"
 
   d = detect_domain(url)
   if (d == "email") return "email"
@@ -187,7 +188,8 @@ function icon_name_for_link(url, kind,   k, d) {
   if (matches_domain(d, "youtube.com") || matches_domain(d, "youtu.be")) return "youtube"
   if (matches_domain(d, "medium.com")) return "medium"
   if (matches_domain(d, "stackoverflow.com") || matches_domain(d, "stackexchange.com")) return "stackoverflow"
-  if (matches_domain(d, "devpost.com") || matches_domain(d, "dorahacks.io")) return "external"
+  if (matches_domain(d, "devpost.com")) return "devpost"
+  if (matches_domain(d, "dorahacks.io")) return "dorahacks"
   if (d != "") return "external"
   return "external"
 }

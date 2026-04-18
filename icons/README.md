@@ -19,4 +19,8 @@ Sources used:
 - https://tabler.io/icons/icon/external-link
 - https://tabler.io/icons/icon/world
 
+Custom local brand-style icons:
+- `devpost.svg`
+- `dorahacks.svg`
+
 SVG files live directly in `icons/` PDF files are generated into `icons/pdf/` for LaTeX rendering
