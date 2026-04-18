@@ -159,7 +159,7 @@ function icon_pdf_path(name) { return "\\detokenize{" CWD "/icons/pdf/" name ".p
 function icon_name_for_link(url, kind,   k, d) {
   k = normalize_service_kind(kind)
   if (k == "location" || k == "lo") return "location"
-  if (k == "email" || k == "") return "email"
+  if (k == "email") return "email"
   if (k == "phone" || k == "ph") return "phone"
   if (k == "booking" || k == "cal" || k == "calendly" || k == "schedule" || k == "meeting") return "booking"
   if (k == "telegram" || k == "tg") return "telegram"
@@ -188,7 +188,7 @@ function icon_name_for_link(url, kind,   k, d) {
   if (matches_domain(d, "medium.com")) return "medium"
   if (matches_domain(d, "stackoverflow.com") || matches_domain(d, "stackexchange.com")) return "stackoverflow"
   if (matches_domain(d, "devpost.com") || matches_domain(d, "dorahacks.io")) return "external"
-  if (d != "") return "world"
+  if (d != "") return "external"
   return "external"
 }
 function prettify_service_label(label, url,   k, raw) {
@@ -492,7 +492,7 @@ function render_contact_line(   row_count, extra_count, i, row, booking, out, le
   booking = render_booking_contact(basics["booking"])
   out = ""
   for (i = 1; i <= row_count; i++) out = out (out != "" ? "\\\\[0.20em]\n" : "") rows[i]
-  if (booking != "") out = out (out != "" ? "\\\\[0.82em]\n\\mbox{}\\\\[0.82em]\n\\mbox{}\\\\[0.82em]\n" : "") booking
+  if (booking != "") out = out (out != "" ? "\\\\[0.82em]\n\\mbox{}\\\\[0.82em]\n" : "") booking
   delete rows
   delete extras
   return out
