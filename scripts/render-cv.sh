@@ -216,25 +216,53 @@ function render_linked_label(url, label, kind,   icon) {
   icon = icon_pdf_path(icon_name_for_link(url, kind))
   return "\\inlineicon{" icon "}\\hspace{0.18em}" label
 }
-function linkify_latex_text(text,   rest, out, prefix, rawurl, clean, trailing, punct) {
+function render_markdown_link(token,   split_pos, label, url) {
+  split_pos = index(token, "](")
+  if (split_pos <= 1) return escape_latex(token)
+  label = substr(token, 2, split_pos - 2)
+  url = substr(token, split_pos + 2, length(token) - split_pos - 2)
+  if (trim(url) == "") return escape_latex(token)
+  return render_href(url, render_linked_label(url, escape_latex(label)))
+}
+function linkify_latex_text(text,   rest, out, prefix, rawurl, clean, trailing, punct, md_pos, md_len, md_token, url_pos, url_len) {
   rest = text
   out = ""
-  while (match(rest, /https?:\/\/[^[:space:]]+/)) {
-    prefix = substr(rest, 1, RSTART - 1)
-    rawurl = substr(rest, RSTART, RLENGTH)
-    clean = rawurl
-    trailing = ""
-    while (clean ~ /[.,;:!?]$/) {
-      punct = substr(clean, length(clean), 1)
-      trailing = punct trailing
-      clean = substr(clean, 1, length(clean) - 1)
+
+  while (rest != "") {
+    md_pos = match(rest, /\[[^][]+\]\(((https?:\/\/)|(mailto:)|(tel:))[^()[:space:]]+\)/)
+    md_len = RLENGTH
+    url_pos = match(rest, /https?:\/\/[^[:space:]]+/)
+    url_len = RLENGTH
+
+    if (md_pos > 0 && (url_pos == 0 || md_pos <= url_pos)) {
+      prefix = substr(rest, 1, md_pos - 1)
+      md_token = substr(rest, md_pos, md_len)
+      out = out escape_latex(prefix)
+      out = out render_markdown_link(md_token)
+      rest = substr(rest, md_pos + md_len)
+      continue
     }
-    out = out escape_latex(prefix)
-    out = out render_href(clean, render_linked_label(clean, "\\nolinkurl{" display_url(clean) "}"))
-    out = out escape_latex(trailing)
-    rest = substr(rest, RSTART + RLENGTH)
+
+    if (url_pos > 0) {
+      prefix = substr(rest, 1, url_pos - 1)
+      rawurl = substr(rest, url_pos, url_len)
+      clean = rawurl
+      trailing = ""
+      while (clean ~ /[.,;:!?]$/) {
+        punct = substr(clean, length(clean), 1)
+        trailing = punct trailing
+        clean = substr(clean, 1, length(clean) - 1)
+      }
+      out = out escape_latex(prefix)
+      out = out render_href(clean, render_linked_label(clean, "\\nolinkurl{" display_url(clean) "}"))
+      out = out escape_latex(trailing)
+      rest = substr(rest, url_pos + url_len)
+      continue
+    }
+
+    out = out escape_latex(rest)
+    break
   }
-  out = out escape_latex(rest)
   return out
 }
 function first_sentence(v,   t) {
@@ -254,8 +282,8 @@ function shorten_sentence(v, max_len,   t, cut) {
 function render_highlights(e,   i, label, url, note, item, out) {
   out = ""
   for (i = 1; i <= hl_count[e]; i++) {
-    label = escape_latex(hl[e, i, "label"])
     url = hl[e, i, "url"]
+    label = (url != "" ? escape_latex(hl[e, i, "label"]) : linkify_latex_text(hl[e, i, "label"]))
     note = hl[e, i, "note"]
     item = (url != "" ? render_href(url, render_linked_label(url, label)) : label)
     if (note != "") item = item " (" linkify_latex_text(note) ")"
@@ -269,7 +297,7 @@ function project_names_text(e, max_n,   i, names, used, name) {
   for (i = 1; i <= proj_count[e] && used < max_n; i++) {
     name = proj[e, i, "name"]
     if (name == "") continue
-    names = names (names != "" ? "; " : "") escape_latex(name)
+    names = names (names != "" ? "; " : "") linkify_latex_text(name)
     used++
   }
   return names
@@ -419,7 +447,7 @@ function render_achievements(   source, i, out, title, desc) {
   if (source == 0) return "{\\fontsize{8.2}{10.1}\\selectfont No public achievements listed.}"
   out = ""
   for (i = 1; i <= hl_count[source] && i <= 3; i++) {
-    title = escape_latex(hl[source, i, "label"])
+    title = linkify_latex_text(hl[source, i, "label"])
     desc = linkify_latex_text(hl[source, i, "note"])
     out = out (out != "" ? "\n" : "") "\\achievemententry{" title "}{" desc "}"
   }
