@@ -4,7 +4,7 @@ A minimal template for generating a CV PDF from a single Markdown file
 
 ## Goal
 
-- edit `cv.md` if `cv.png` or `cv.jpg` exists in the project root, it is used, otherwise, an avatar is downloaded from the [DiceBear Identicon](http://dicebear.com/styles/identicon/)
+- edit `cv.md` adn optionally add `cv.png` or `cv.jpg` to override the generated identicon
 - run `make pdf`
 - get `cv-xp-<mode>.pdf`
 
@@ -12,7 +12,7 @@ A minimal template for generating a CV PDF from a single Markdown file
 
 ```bash
 make doctor
-make pdf xp=5       # show 5 full experience entries
+make pdf xp=4       # show 4 full experience entries
 make pdf xp=full    # show all experience entries in full format
 ```
 

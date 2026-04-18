@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usepackage{graphicx}
 \usepackage{ragged2e}
+\usepackage{paracol}
 \pagestyle{empty}
 
 \setmainfont{JetBrains Mono}[Scale=0.94]
@@ -35,6 +36,7 @@
 \newcommand{\contactplain}[2]{\mbox{\iconglyph{#1}\hspace{0.40em}{#2}}}
 \newcommand{\contactitem}[3]{\href{#2}{\mbox{\iconglyph{#1}\hspace{0.40em}{#3}}}}
 \newcommand{\actionitem}[3]{\href{#2}{\tikz[baseline=-0.58ex]{\node[rounded corners=5pt,fill=accent!10,draw=accent!28,text=accent,inner xsep=7.0pt,inner ysep=3.3pt,font=\bfseries\fontsize{6.8}{6.8}\selectfont]{\iconglyph[0.88em]{#1}\hspace{0.46em}#3};}}}
+\newcommand{\bookingitem}[3]{\href{#2}{\tikz[baseline=-0.66ex]{\node[rounded corners=7pt,fill=accent!10,draw=accent!28,text=accent,inner xsep=8.8pt,inner ysep=4.4pt,font=\bfseries\fontsize{10.2}{10.2}\selectfont]{\iconglyph[0.96em]{#1}\hspace{0.48em}#3};}}}
 \newcommand{\experienceentry}[4]{%
   {\bfseries #1}\par
   {\color{accent}\bfseries #2}\par

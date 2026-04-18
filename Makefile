@@ -1,6 +1,6 @@
 SOURCE := cv.md
 TEMPLATE := templates/CV.template.tex
-xp ?= 5
+xp ?= 4
 verbose ?= 0
 OUTPUT_PDF := cv-xp-$(xp).pdf
 
@@ -19,7 +19,8 @@ test:
 	@./tests/render-cv.sh
 
 pdf: validate icons
-	@TMP_DIR="$$(mktemp -d)"; \
+	@set -e; \
+	TMP_DIR="$$(mktemp -d)"; \
 	trap 'rm -rf "$$TMP_DIR"' EXIT; \
 	./scripts/render-cv.sh --input "$(SOURCE)" --output "$$TMP_DIR/cv.tex" --detailed-count "$(xp)"; \
 	mkdir -p "$$TMP_DIR/texmf-var"; \

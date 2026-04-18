@@ -12,7 +12,7 @@ for file in "$DATA_FILE" "$TEMPLATE_FILE"; do
 done
 
 missing=0
-for cmd in bash awk curl lualatex pdfinfo pdftotext fc-match inkscape; do
+for cmd in bash awk cksum lualatex pdfinfo pdftotext fc-match inkscape; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "ERROR: required command not found: $cmd" >&2
     missing=1
@@ -20,7 +20,7 @@ for cmd in bash awk curl lualatex pdfinfo pdftotext fc-match inkscape; do
 done
 
 if [[ "$missing" -ne 0 ]]; then
-  echo "Install bash, awk, curl, LuaLaTeX, fontconfig, JetBrains Mono, poppler-utils, and Inkscape, then rerun." >&2
+  echo "Install bash, awk, coreutils, LuaLaTeX, fontconfig, JetBrains Mono, poppler-utils, and Inkscape, then rerun." >&2
   exit 1
 fi
 
@@ -33,7 +33,7 @@ echo "Source: $DATA_FILE"
 echo "Template: $TEMPLATE_FILE"
 echo "bash: $(command -v bash)"
 echo "awk: $(command -v awk)"
-echo "curl: $(command -v curl)"
+echo "cksum: $(command -v cksum)"
 echo "lualatex: $(command -v lualatex)"
 echo "pdfinfo: $(command -v pdfinfo)"
 echo "pdftotext: $(command -v pdftotext)"

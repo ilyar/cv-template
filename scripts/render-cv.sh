@@ -35,6 +35,7 @@ done
 
 cwd="$(pwd -P)"
 template="$cwd/templates/CV.template.tex"
+identicon_script="$cwd/scripts/identicon.sh"
 if [[ "$input" = /* ]]; then
   input_path="$input"
 else
@@ -48,7 +49,7 @@ fi
 name_for_avatar="$(awk '/^# /{sub(/^# /, ""); print; exit}' "$input_path")"
 
 render_avatar() {
-  local candidate abs out_dir svg pdf api_url avatar_seed
+  local candidate abs
   for candidate in cv.png cv.jpg; do
     if [[ -f "$cwd/$candidate" ]]; then
       abs="$cwd/$candidate"
@@ -57,31 +58,7 @@ render_avatar() {
     fi
   done
 
-  out_dir="$(dirname "$output_path")"
-  mkdir -p "$out_dir"
-  svg="$out_dir/avatar-dicebear.svg"
-  pdf="$out_dir/avatar-dicebear.pdf"
-  api_url='https://api.dicebear.com/9.x/identicon/svg'
-  avatar_seed="${name_for_avatar:-CV Template}"
-
-  curl -fsSL --get \
-    --data-urlencode "seed=$avatar_seed" \
-    --data-urlencode "size=256" \
-    --data-urlencode "scale=90" \
-    --data-urlencode "backgroundType=solid" \
-    --data-urlencode "backgroundColor=f4f7fb" \
-    "$api_url" \
-    -o "$svg" || {
-      echo "ERROR: failed to download avatar from DiceBear API: $api_url" >&2
-      exit 1
-    }
-
-  inkscape "$svg" --export-filename="$pdf" >/dev/null 2>&1 || {
-    echo "ERROR: failed to convert DiceBear avatar to PDF: $svg" >&2
-    exit 1
-  }
-
-  printf '\\photocircle{\\detokenize{%s}}' "$pdf"
+  "$identicon_script" --seed "${name_for_avatar:-CV Template}"
 }
 
 avatar_tex="$(render_avatar)"
@@ -98,18 +75,24 @@ function lower(s) { return tolower(s) }
 function normalize_key(s) { return lower(trim(s)) }
 function normalize_service_kind(s) { s = lower(s); gsub(/[^a-z0-9]+/, "", s); return s }
 function append_val(curr, val, sep) { return curr == "" ? val : curr sep val }
-function escape_latex(s,    t) {
+function escape_latex(s,    t, bs, tl, cr) {
   t = s
-  gsub(/\\/, "\\textbackslash{}", t)
+  bs = "\034LATEXBS\034"
+  tl = "\034LATEXTL\034"
+  cr = "\034LATEXCR\034"
+  gsub(/\\/, bs, t)
+  gsub(/~/, tl, t)
+  gsub(/\^/, cr, t)
   gsub(/\{/, "\\{", t)
   gsub(/\}/, "\\}", t)
   gsub(/#/, "\\#", t)
   gsub(/\$/, "\\$", t)
   gsub(/%/, "\\%", t)
-  gsub(/&/, "\\&", t)
+  gsub(/&/, "\\\\&", t)
   gsub(/_/, "\\_", t)
-  gsub(/~/, "\\textasciitilde{}", t)
-  gsub(/\^/, "\\textasciicircum{}", t)
+  gsub(bs, "\\textbackslash{}", t)
+  gsub(tl, "\\textasciitilde{}", t)
+  gsub(cr, "\\textasciicircum{}", t)
   return t
 }
 function replace_all(str, token, val,   pos, out) {
@@ -451,7 +434,7 @@ function render_link_contact(icon, url, label,   ipath) {
   return "\\contactitem{" ipath "}{\\detokenize{" trim(url) "}}{" escape_latex(label) "}"
 }
 function render_booking_contact(url) {
-  return trim(url) == "" ? "" : "\\actionitem{" icon_pdf_path("booking") "}{\\detokenize{" trim(url) "}}{Schedule a meeting}"
+  return trim(url) == "" ? "" : "\\bookingitem{" icon_pdf_path("booking") "}{\\detokenize{" trim(url) "}}{Booking meet}"
 }
 function render_telegram_contact(value) {
   value = trim(value)
@@ -472,21 +455,47 @@ function render_service_contact(idx,   href) {
   if (trim(href) == "") return ""
   return render_link_contact(service[idx, "kind"], href, prettify_service_label(service[idx, "label"], href))
 }
-function render_contact_line(   n, i, booking, out) {
-  n = 0
-  if (basics["location"] != "") chunks[++n] = render_plain_contact("lo", basics["location"])
-  if (basics["email"] != "") chunks[++n] = render_link_contact("@", "mailto:" basics["email"], basics["email"])
-  if (basics["phone"] != "") chunks[++n] = render_phone_contact(basics["phone"])
-  if (basics["telegram"] != "") chunks[++n] = render_telegram_contact(basics["telegram"])
-  if (basics["linkedin"] != "") chunks[++n] = render_link_contact("in", basics["linkedin"], display_url(basics["linkedin"]))
-  if (basics["github"] != "") chunks[++n] = render_link_contact("gh", basics["github"], display_url(basics["github"]))
-  for (i = 1; i <= service_count; i++) chunks[++n] = render_service_contact(i)
+function render_contact_row(left, right,   row) {
+  row = ""
+  if (left != "") row = left
+  if (right != "") row = row (row != "" ? "\\hspace{0.92em}" : "") right
+  return row
+}
+function render_contact_line(   row_count, extra_count, i, row, booking, out, left, right) {
+  row_count = 0
+  extra_count = 0
+
+  left = (basics["location"] != "" ? render_plain_contact("lo", basics["location"]) : "")
+  right = (basics["phone"] != "" ? render_phone_contact(basics["phone"]) : "")
+  row = render_contact_row(left, right)
+  if (row != "") rows[++row_count] = row
+
+  left = (basics["email"] != "" ? render_link_contact("@", "mailto:" basics["email"], basics["email"]) : "")
+  right = (basics["telegram"] != "" ? render_telegram_contact(basics["telegram"]) : "")
+  row = render_contact_row(left, right)
+  if (row != "") rows[++row_count] = row
+
+  left = (basics["linkedin"] != "" ? render_link_contact("in", basics["linkedin"], display_url(basics["linkedin"])) : "")
+  right = (basics["github"] != "" ? render_link_contact("gh", basics["github"], display_url(basics["github"])) : "")
+  row = render_contact_row(left, right)
+  if (row != "") rows[++row_count] = row
+
+  for (i = 1; i <= service_count; i++) {
+    row = render_service_contact(i)
+    if (row != "") extras[++extra_count] = row
+  }
+  for (i = 1; i <= extra_count; i += 2) {
+    row = render_contact_row(extras[i], extras[i + 1])
+    if (row != "") rows[++row_count] = row
+  }
+
   booking = render_booking_contact(basics["booking"])
   out = ""
-  for (i = 1; i <= n; i++) if (chunks[i] != "") out = out (out != "" ? "\\hspace{0.72em}" : "") chunks[i]
-  delete chunks
-  if (out != "" && booking != "") return out "\\hspace{0.95em}" booking
-  return out booking
+  for (i = 1; i <= row_count; i++) out = out (out != "" ? "\\\\[0.20em]\n" : "") rows[i]
+  if (booking != "") out = out (out != "" ? "\\\\[0.82em]\n\\mbox{}\\\\[0.82em]\n\\mbox{}\\\\[0.82em]\n" : "") booking
+  delete rows
+  delete extras
+  return out
 }
 function render_left_column() {
   return "\\sectiontitle{Experience}\n\n" render_experience_entries() "\n\n\\sectiontitle{Education}\n\n" render_education()
@@ -497,7 +506,7 @@ function render_right_column() {
   return "\\sectiontitle{Summary}\n\n{\\fontsize{7.2}{8.5}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact()
 }
 function render_two_column_body() {
-  return "\\begin{minipage}[t]{0.61\\textwidth}\n  \\RaggedRight\n" render_left_column() "\n\\end{minipage}\\hfill\n\\begin{minipage}[t]{0.33\\textwidth}\n  \\RaggedRight\n" render_right_column() "\n\\end{minipage}"
+  return "\\columnratio{0.63,0.37}\n\\setlength{\\columnsep}{0.045\\textwidth}\n\\begin{paracol}{2}\n\\RaggedRight\n" render_left_column() "\n\\switchcolumn\n\\RaggedRight\n" render_right_column() "\n\\end{paracol}"
 }
 function render_full_body(   summary_text, i) {
   summary_text = ""
@@ -608,11 +617,14 @@ BEGIN {
       if (current_subsection == "Public highlights") {
         if (indent == 0) {
           current_highlight = ++hl_count[current_exp]
-          split(text, parts, / [—–-] /)
-          hl[current_exp, current_highlight, "label"] = trim(parts[1])
-          note = text
-          sub(/^[^—–-]+[ ]*[—–-][ ]*/, "", note)
-          hl[current_exp, current_highlight, "note"] = (note == text ? "" : trim(note))
+          split_pos = index(text, " - ")
+          if (split_pos > 0) {
+            hl[current_exp, current_highlight, "label"] = trim(substr(text, 1, split_pos - 1))
+            hl[current_exp, current_highlight, "note"] = trim(substr(text, split_pos + 3))
+          } else {
+            hl[current_exp, current_highlight, "label"] = text
+            hl[current_exp, current_highlight, "note"] = ""
+          }
         } else if (current_highlight > 0) {
           if (text ~ /^Submission:[[:space:]]+/) {
             sub(/^Submission:[[:space:]]+/, "", text)
