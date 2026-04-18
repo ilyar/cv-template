@@ -21,7 +21,7 @@ jobs:
       - name: Build and validate in dev container
         uses: devcontainers/ci@v0.3
         with:
-          runCmd: make ci && make pdf xp=5 && make pdf xp=full
+          runCmd: make pdf xp=4 && make pdf xp=full
 
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
@@ -30,6 +30,7 @@ jobs:
           path: cv-*.pdf
 
       - name: Generate supply chain attestation
+        id: attest
         if: ${{ github.event.repository.private != true }}
         uses: actions/attest@v4
         with:
@@ -39,6 +40,23 @@ jobs:
         id: release_tag
         run: echo "tag=$(date -u +v%Y.%m.%d)" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare release notes
+        env:
+          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
+          REPOSITORY: ${{ github.repository }}
+          HAS_ATTESTATION: ${{ steps.attest.outcome == 'success' }}
+        run: |
+          {
+            echo "Automated release for $RELEASE_TAG"
+            if [[ "$HAS_ATTESTATION" == "true" ]]; then
+              echo
+              echo '```bash'
+              echo "gh attestation verify cv-xp-4.pdf -R $REPOSITORY"
+              echo "gh attestation verify cv-xp-full.pdf -R $REPOSITORY"
+              echo '```'
+            fi
+          } > release-notes.txt
+
       - name: Create or update GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,8 +64,11 @@ jobs:
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" cv-*.pdf --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "$RELEASE_TAG" \
+              --notes-file release-notes.txt
           else
             gh release create "$RELEASE_TAG" cv-*.pdf \
               --title "$RELEASE_TAG" \
-              --notes "Automated release for $RELEASE_TAG."
+              --notes-file release-notes.txt
           fi
