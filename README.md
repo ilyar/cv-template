@@ -25,3 +25,10 @@ npm install -g @devcontainers/cli
 devcontainer up
 devcontainer exec make pdf
 ```
+
+Or use [deco](https://github.com/ilyar/deco) alternatively for `@devcontainers/cli` 
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ilyar/deco/refs/heads/main/install.sh | bash
+deco exec make pdf
+```
