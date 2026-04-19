@@ -438,10 +438,19 @@ function render_skills_compact(   out, i, j) {
   }
   return out
 }
-function render_education(   details, i) {
-  details = ""
-  for (i = 1; i <= edu_detail_count; i++) details = details (details != "" ? " " : "") linkify_latex_text(edu_detail[i])
-  return "\\educationentry{Education}{" escape_latex(education["institution"]) "}{" escape_latex(education["date"]) "}{" escape_latex(education["degree"]) (details != "" ? " " details : "") "}"
+function render_education(   items, i, k, v) {
+  items = ""
+  for (i = 1; i <= edu_detail_count; i++) {
+    if (parse_pair(edu_detail[i], kv)) {
+      k = kv["key"]; v = kv["value"]
+      k = toupper(substr(k,1,1)) substr(k,2)
+      items = items "\n\\item \\textbf{" escape_latex(k) ":} " linkify_latex_text(v)
+    } else {
+      items = items "\n\\item " linkify_latex_text(edu_detail[i])
+    }
+  }
+
+  return "\\educationentry{Education}{" escape_latex(education["institution"]) "}{" escape_latex(education["date"]) "}{" items "}"
 }
 function render_achievements(   source, i, out, title, desc) {
   source = 0
@@ -715,8 +724,7 @@ BEGIN {
       }
     }
     text = trimmed; sub(/^-[[:space:]]+/, "", text)
-    if (parse_pair(text, kv) && kv["key"] == "degree") education["degree"] = kv["value"]
-    else edu_detail[++edu_detail_count] = text
+    edu_detail[++edu_detail_count] = text
     next
   }
 
