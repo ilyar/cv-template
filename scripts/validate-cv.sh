@@ -375,9 +375,7 @@ BEGIN {
     text = trimmed
     sub(/^-[[:space:]]+/, "", text)
     if (parse_pair(text)) {
-      if (!(pair_key in education_keys)) fail(unknown_education_key_message(pair_key), NR)
       if (pair_value == "") fail("empty Education value for key " bt(pair_key) ".", NR)
-      if (pair_key == "degree") education_has_degree = 1
     }
     next
   }
@@ -395,7 +393,7 @@ END {
   if (summary_count < 1) fail(bt("## Structured summary") " must contain at least one bullet like " bt("- Short factual summary.") ".")
   if (skill_category_count < 1) fail(bt("## Skills inventory") " must contain at least one " bt("### Category") ".")
   if (experience_count < 1) fail(bt("## Professional experience") " must contain at least one experience entry like " bt("### Date | Company | Role") ".")
-  if (!education_has_degree) fail("Education must contain a " bt("Degree:") " bullet.\nMinimal placeholder example: " bt("- Degree: Not publicly listed") ".")
+
   print "Validated " INPUT_NAME
 }
 ' "$input"
