@@ -80,6 +80,13 @@
 - Linux
 - Windows
 
+### Languages
+
+- English: B2
+- Spanish: B1
+- German: A2
+- Russian: native
+
 ## Professional experience
 
 ### Jan 2023 - Present | Example Labs | Senior Full-Stack Engineer
@@ -98,8 +105,20 @@
 
 #### Public highlights
 
-- Example product launch - public case study
-  - Submission: https://www.example.com/case-study
+- [CV template repository](https://github.com/ever-guild/cv-template) - maintained a reusable Markdown-to-PDF CV template with validation, rendering, and icon support.
+  - Demo: https://www.youtube.com/watch?v=yhTHQ_-prEM
+- [Ever Guild Telegram](https://t.me/everguild) - shared product updates, release notes, and community feedback for the template workflow.
+- [Video walkthrough](https://www.youtube.com/watch?v=yhTHQ_-prEM) - recorded a short demo showing the generated PDF, links, and public profile layout.
+- [Prototype delivery challenge](https://devpost.com/software/lorem-platform-demo) - shipped a working product demo with onboarding, dashboard, and admin flows.
+- [Protocol integration sprint](https://dorahacks.io/buidl/12345) - built a small integration layer for identity checks, event tracking, and partner review.
+- [IdentityHub profile](https://identityhub.xyz/lorem-ipsum) - published a compact profile with project links, verification notes, and portfolio references.
+  - Demo: https://identityhub.xyz/lorem-ipsum/demo
+- [Community launch thread](https://www.reddit.com/r/loremipsum/comments/123456/community_launch_thread/) - collected product feedback, bug reports, and early user questions after the demo release.
+  - Reddit demo: https://www.reddit.com/r/loremipsum/comments/123456/community_launch_thread/
+- [Engineering write-up](https://medium.com/@loremipsum/platform-modernization-notes) - summarized delivery constraints, technical tradeoffs, and follow-up work after launch.
+- [Integration answer](https://stackoverflow.com/questions/12345678/lorem-platform-integration-pattern) - documented a reusable pattern for API callbacks and background job retries.
+- [Source repository](https://gitlab.com/lorem-ipsum/platform-modernization) - shared a sample implementation with CI, tests, and deployment notes.
+- [Public case study](https://www.example.com/case-study) - described project scope, team workflow, and delivery outcomes for a general audience.
 
 ### Apr 2021 - Dec 2022 | Acme Systems | Software Engineer
 
