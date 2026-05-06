@@ -171,6 +171,7 @@ function icon_name_for_link(url, kind,   k, d) {
   if (k == "youtube") return "youtube"
   if (k == "medium") return "medium"
   if (k == "stackoverflow" || k == "stackexchange") return "stackoverflow"
+  if (k == "identityhub" || k == "identity") return "identityhub"
   if (k == "website" || k == "site" || k == "portfolio" || k == "blog" || k == "homepage") return "world"
   if (k == "devpost") return "devpost"
   if (k == "dorahacks") return "dorahacks"
@@ -188,6 +189,7 @@ function icon_name_for_link(url, kind,   k, d) {
   if (matches_domain(d, "youtube.com") || matches_domain(d, "youtu.be")) return "youtube"
   if (matches_domain(d, "medium.com")) return "medium"
   if (matches_domain(d, "stackoverflow.com") || matches_domain(d, "stackexchange.com")) return "stackoverflow"
+  if (matches_domain(d, "identityhub.com") || matches_domain(d, "identityhub.io") || matches_domain(d, "identityhub.xyz")) return "identityhub"
   if (matches_domain(d, "devpost.com")) return "devpost"
   if (matches_domain(d, "dorahacks.io")) return "dorahacks"
   if (d != "") return "external"
@@ -205,6 +207,7 @@ function prettify_service_label(label, url,   k, raw) {
   if (k == "youtube") return "YouTube"
   if (k == "medium") return "Medium"
   if (k == "stackoverflow") return "Stack Overflow"
+  if (k == "identityhub" || k == "identity") return "IdentityHub"
   if (k == "devpost") return "Devpost"
   if (k == "dorahacks") return "DoraHacks"
   if (k == "website") return "Website"
@@ -216,7 +219,7 @@ function prettify_service_label(label, url,   k, raw) {
 function render_href(url, label) { return trim(url) == "" ? label : "\\href{\\detokenize{" trim(url) "}}{" label "}" }
 function render_linked_label(url, label, kind,   icon) {
   icon = icon_pdf_path(icon_name_for_link(url, kind))
-  return "\\inlineicon{" icon "}\\hspace{0.18em}" label
+  return "\\inlineicon{" icon "}\\nobreak\\hspace{0.18em}" label
 }
 function render_markdown_link(token,   split_pos, label, url) {
   split_pos = index(token, "](")
@@ -225,6 +228,14 @@ function render_markdown_link(token,   split_pos, label, url) {
   url = substr(token, split_pos + 2, length(token) - split_pos - 2)
   if (trim(url) == "") return escape_latex(token)
   return render_href(url, render_linked_label(url, escape_latex(label)))
+}
+function split_markdown_link_token(token, arr,   split_pos) {
+  delete arr
+  split_pos = index(token, "](")
+  if (split_pos <= 1 || substr(token, 1, 1) != "[" || substr(token, length(token), 1) != ")") return 0
+  arr["label"] = substr(token, 2, split_pos - 2)
+  arr["url"] = substr(token, split_pos + 2, length(token) - split_pos - 2)
+  return trim(arr["label"]) != "" && trim(arr["url"]) != ""
 }
 function linkify_latex_text(text,   rest, out, prefix, rawurl, clean, trailing, punct, md_pos, md_len, md_token, url_pos, url_len) {
   rest = text
@@ -471,18 +482,37 @@ function render_education(   items, i, k, v) {
 
   return "\\educationentry{Education}{" escape_latex(education["institution"]) "}{" escape_latex(education["date"]) "}{" items "}"
 }
-function render_achievements(   source, i, out, title, desc, url, raw_label) {
+function compact_link_label(url, raw_label,   icon, label) {
+  icon = icon_name_for_link(url, "")
+  label = prettify_service_label(icon, url)
+  if (label == "external") label = "External"
+  return label != "" ? label : raw_label
+}
+function render_compact_achievement_links(source, start,   i, out, title, url, raw_label) {
+  out = ""
+  for (i = start; i <= hl_count[source]; i++) {
+    url = hl[source, i, "url"]
+    raw_label = hl[source, i, "label"]
+    title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(compact_link_label(url, raw_label)))) : linkify_latex_text(raw_label))
+    out = out (out != "" ? "; " : "") title
+  }
+  return out == "" ? "" : "{\\fontsize{5.85}{6.55}\\selectfont\\RaggedRight " out "}"
+}
+function render_achievements(   source, i, out, title, desc, url, raw_label, full_count, compact) {
   source = 0
   for (i = 1; i <= exp_count; i++) if (hl_count[i] > 0) { source = i; break }
   if (source == 0) return "{\\fontsize{8.2}{10.1}\\selectfont No public achievements listed.}"
   out = ""
-  for (i = 1; i <= hl_count[source] && i <= 3; i++) {
+  full_count = (hl_count[source] < 3 ? hl_count[source] : 3)
+  for (i = 1; i <= full_count; i++) {
     url = hl[source, i, "url"]
     raw_label = hl[source, i, "label"]
     title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(raw_label))) : linkify_latex_text(raw_label))
     desc = linkify_latex_text(hl[source, i, "note"])
     out = out (out != "" ? "\n" : "") "\\achievemententry{" title "}{" desc "}"
   }
+  compact = render_compact_achievement_links(source, full_count + 1)
+  if (compact != "") out = out "\n" compact
   return out
 }
 function render_plain_contact(icon, label) {
@@ -680,7 +710,12 @@ BEGIN {
           if (match(text, /^\[[^][]+\]\(((https?:\/\/)|(mailto:)|(tel:))[^()[:space:]]+\)[[:space:]]+-[[:space:]]+/)) {
             md_token = substr(text, 1, RLENGTH)
             sub(/[[:space:]]+-[[:space:]]+$/, "", md_token)
-            hl[current_exp, current_highlight, "label"] = md_token
+            if (split_markdown_link_token(md_token, md)) {
+              hl[current_exp, current_highlight, "label"] = trim(md["label"])
+              hl[current_exp, current_highlight, "url"] = trim(md["url"])
+            } else {
+              hl[current_exp, current_highlight, "label"] = md_token
+            }
             hl[current_exp, current_highlight, "note"] = trim(substr(text, RLENGTH + 1))
           } else {
             split_pos = index(text, " - ")
@@ -693,11 +728,15 @@ BEGIN {
             }
           }
         } else if (current_highlight > 0) {
-          if (text ~ /^Submission:[[:space:]]+/) {
-            sub(/^Submission:[[:space:]]+/, "", text)
-            hl[current_exp, current_highlight, "url"] = trim(text)
+          if (parse_pair(text, kv)) {
+            nested_label = toupper(substr(kv["key"], 1, 1)) substr(kv["key"], 2)
+            if (kv["key"] == "reddit demo") nested_label = "Reddit demo"
+            if (hl[current_exp, current_highlight, "url"] == "" && kv["key"] == "submission") {
+              hl[current_exp, current_highlight, "url"] = trim(kv["value"])
+            } else {
+              hl[current_exp, current_highlight, "note"] = append_val(hl[current_exp, current_highlight, "note"], nested_label ": " kv["value"], "; ")
+            }
           } else {
-            sub(/^Reddit demo:[[:space:]]*/, "Reddit demo: ", text)
             hl[current_exp, current_highlight, "note"] = append_val(hl[current_exp, current_highlight, "note"], text, "; ")
           }
         }
