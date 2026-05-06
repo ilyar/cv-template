@@ -428,15 +428,34 @@ function render_experience_entries(   detailed_limit, compact_total, dense, macr
   }
   return out
 }
+function is_languages_category(name,   n) {
+  n = lower(trim(name))
+  return n == "languages" || n == "language"
+}
 function render_skills_compact(   out, i, j) {
   out = ""
   for (i = 1; i <= skill_count; i++) {
+    if (is_languages_category(skill_cat[i])) continue
     block = "{\\fontsize{7.0}{8.1}\\selectfont\\textbf{" escape_latex(skill_cat[i]) "} "
     for (j = 1; j <= skill_item_count[i]; j++) block = block (j > 1 ? ", " : "") escape_latex(skill_item[i, j])
     block = block "}"
     out = out (out != "" ? "\\par\\vspace{0.18em}" : "") block
   }
   return out
+}
+function render_languages_compact(   out, i, j) {
+  out = ""
+  for (i = 1; i <= skill_count; i++) {
+    if (!is_languages_category(skill_cat[i])) continue
+    for (j = 1; j <= skill_item_count[i]; j++) {
+      out = out (out != "" ? "\\par\\vspace{0.12em}" : "") "{\\fontsize{7.0}{8.1}\\selectfont " escape_latex(skill_item[i, j]) "}"
+    }
+  }
+  return out
+}
+function render_languages_section(   body) {
+  body = render_languages_compact()
+  return body == "" ? "" : "\n\n\\sectiontitle{Languages}\n\n" body
 }
 function render_education(   items, i, k, v) {
   items = ""
@@ -452,13 +471,15 @@ function render_education(   items, i, k, v) {
 
   return "\\educationentry{Education}{" escape_latex(education["institution"]) "}{" escape_latex(education["date"]) "}{" items "}"
 }
-function render_achievements(   source, i, out, title, desc) {
+function render_achievements(   source, i, out, title, desc, url, raw_label) {
   source = 0
   for (i = 1; i <= exp_count; i++) if (hl_count[i] > 0) { source = i; break }
   if (source == 0) return "{\\fontsize{8.2}{10.1}\\selectfont No public achievements listed.}"
   out = ""
   for (i = 1; i <= hl_count[source] && i <= 3; i++) {
-    title = linkify_latex_text(hl[source, i, "label"])
+    url = hl[source, i, "url"]
+    raw_label = hl[source, i, "label"]
+    title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(raw_label))) : linkify_latex_text(raw_label))
     desc = linkify_latex_text(hl[source, i, "note"])
     out = out (out != "" ? "\n" : "") "\\achievemententry{" title "}{" desc "}"
   }
@@ -542,7 +563,7 @@ function render_left_column() {
 function render_right_column() {
   summary_text = ""
   for (i = 1; i <= summary_count; i++) summary_text = summary_text (summary_text != "" ? " " : "") linkify_latex_text(summary[i])
-  return "\\sectiontitle{Summary}\n\n{\\fontsize{7.2}{8.5}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact()
+  return "\\sectiontitle{Summary}\n\n{\\fontsize{7.2}{8.5}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact() render_languages_section()
 }
 function render_two_column_body() {
   return "\\columnratio{0.63,0.37}\n\\setlength{\\columnsep}{0.045\\textwidth}\n\\begin{paracol}{2}\n\\RaggedRight\n" render_left_column() "\n\\switchcolumn\n\\RaggedRight\n" render_right_column() "\n\\end{paracol}"
@@ -550,7 +571,7 @@ function render_two_column_body() {
 function render_full_body(   summary_text, i) {
   summary_text = ""
   for (i = 1; i <= summary_count; i++) summary_text = summary_text (summary_text != "" ? " " : "") linkify_latex_text(summary[i])
-  return "\\sectiontitle{Summary}\n\n{\\fontsize{8.0}{9.4}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact() "\n\n\\sectiontitle{Experience}\n\n" render_experience_entries() "\n\n\\sectiontitle{Education}\n\n" render_education()
+  return "\\sectiontitle{Summary}\n\n{\\fontsize{8.0}{9.4}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact() render_languages_section() "\n\n\\sectiontitle{Experience}\n\n" render_experience_entries() "\n\n\\sectiontitle{Education}\n\n" render_education()
 }
 BEGIN {
   SUBSEP_LIST = "\034"
@@ -656,13 +677,20 @@ BEGIN {
       if (current_subsection == "Public highlights") {
         if (indent == 0) {
           current_highlight = ++hl_count[current_exp]
-          split_pos = index(text, " - ")
-          if (split_pos > 0) {
-            hl[current_exp, current_highlight, "label"] = trim(substr(text, 1, split_pos - 1))
-            hl[current_exp, current_highlight, "note"] = trim(substr(text, split_pos + 3))
+          if (match(text, /^\[[^][]+\]\(((https?:\/\/)|(mailto:)|(tel:))[^()[:space:]]+\)[[:space:]]+-[[:space:]]+/)) {
+            md_token = substr(text, 1, RLENGTH)
+            sub(/[[:space:]]+-[[:space:]]+$/, "", md_token)
+            hl[current_exp, current_highlight, "label"] = md_token
+            hl[current_exp, current_highlight, "note"] = trim(substr(text, RLENGTH + 1))
           } else {
-            hl[current_exp, current_highlight, "label"] = text
-            hl[current_exp, current_highlight, "note"] = ""
+            split_pos = index(text, " - ")
+            if (split_pos > 0) {
+              hl[current_exp, current_highlight, "label"] = trim(substr(text, 1, split_pos - 1))
+              hl[current_exp, current_highlight, "note"] = trim(substr(text, split_pos + 3))
+            } else {
+              hl[current_exp, current_highlight, "label"] = text
+              hl[current_exp, current_highlight, "note"] = ""
+            }
           }
         } else if (current_highlight > 0) {
           if (text ~ /^Submission:[[:space:]]+/) {
