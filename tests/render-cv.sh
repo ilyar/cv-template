@@ -161,6 +161,14 @@ cat >"$TMP_DIR/valid-cv.md" <<'EOF'
   - Demo: https://www.youtube.com/watch?v=yhTHQ_-prEM
 - [Ever Guild Telegram](https://t.me/everguild) - Public release channel.
 
+### 2025 | Second Studio | Product Designer
+
+- Summary: Designed product pages.
+
+#### Public highlights
+
+- [Second project](https://devpost.com/software/second-project) - Second public highlight.
+
 ## Education
 
 ### 2020 - Example University
@@ -178,10 +186,13 @@ expect_contains '\sectiontitle{Education}' "$TMP_DIR/cv.tex"
 expect_contains '\href{\detokenize{https://github.com/ever-guild/cv-template}}' "$TMP_DIR/cv.tex"
 expect_contains '\href{\detokenize{https://www.youtube.com/watch?v=yhTHQ_-prEM}}' "$TMP_DIR/cv.tex"
 expect_contains '\href{\detokenize{https://t.me/everguild}}' "$TMP_DIR/cv.tex"
+expect_contains '\href{\detokenize{https://devpost.com/software/second-project}}' "$TMP_DIR/cv.tex"
 expect_contains '/icons/pdf/github.pdf' "$TMP_DIR/cv.tex"
 expect_contains '/icons/pdf/youtube.pdf' "$TMP_DIR/cv.tex"
 expect_contains '/icons/pdf/telegram.pdf' "$TMP_DIR/cv.tex"
+expect_contains '/icons/pdf/devpost.pdf' "$TMP_DIR/cv.tex"
 expect_contains '\nobreak\hspace{0.18em}Template repository' "$TMP_DIR/cv.tex"
 expect_contains '\nobreak\hspace{0.18em}Ever Guild Telegram' "$TMP_DIR/cv.tex"
+expect_contains '\nobreak\hspace{0.18em}Second project' "$TMP_DIR/cv.tex"
 
 echo "tests passed"

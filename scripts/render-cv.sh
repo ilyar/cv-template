@@ -482,38 +482,20 @@ function render_education(   items, i, k, v) {
 
   return "\\educationentry{Education}{" escape_latex(education["institution"]) "}{" escape_latex(education["date"]) "}{" items "}"
 }
-function compact_link_label(url, raw_label,   icon, label) {
-  icon = icon_name_for_link(url, "")
-  label = prettify_service_label(icon, url)
-  if (label == "external") label = "External"
-  return label != "" ? label : raw_label
-}
-function render_compact_achievement_links(source, start,   i, out, title, url, raw_label) {
+function render_achievements(   e, i, out, title, desc, url, raw_label, total) {
   out = ""
-  for (i = start; i <= hl_count[source]; i++) {
-    url = hl[source, i, "url"]
-    raw_label = hl[source, i, "label"]
-    title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(compact_link_label(url, raw_label)))) : linkify_latex_text(raw_label))
-    out = out (out != "" ? "; " : "") title
+  total = 0
+  for (e = 1; e <= exp_count; e++) {
+    for (i = 1; i <= hl_count[e]; i++) {
+      total++
+      url = hl[e, i, "url"]
+      raw_label = hl[e, i, "label"]
+      title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(raw_label))) : linkify_latex_text(raw_label))
+      desc = linkify_latex_text(hl[e, i, "note"])
+      out = out (out != "" ? "\n" : "") "\\achievemententry{" title "}{" desc "}"
+    }
   }
-  return out == "" ? "" : "{\\fontsize{5.85}{6.55}\\selectfont\\RaggedRight " out "}"
-}
-function render_achievements(   source, i, out, title, desc, url, raw_label, full_count, compact) {
-  source = 0
-  for (i = 1; i <= exp_count; i++) if (hl_count[i] > 0) { source = i; break }
-  if (source == 0) return "{\\fontsize{8.2}{10.1}\\selectfont No public achievements listed.}"
-  out = ""
-  full_count = (hl_count[source] < 3 ? hl_count[source] : 3)
-  for (i = 1; i <= full_count; i++) {
-    url = hl[source, i, "url"]
-    raw_label = hl[source, i, "label"]
-    title = (url != "" ? render_href(url, render_linked_label(url, escape_latex(raw_label))) : linkify_latex_text(raw_label))
-    desc = linkify_latex_text(hl[source, i, "note"])
-    out = out (out != "" ? "\n" : "") "\\achievemententry{" title "}{" desc "}"
-  }
-  compact = render_compact_achievement_links(source, full_count + 1)
-  if (compact != "") out = out "\n" compact
-  return out
+  return total == 0 ? "{\\fontsize{8.2}{10.1}\\selectfont No public achievements listed.}" : out
 }
 function render_plain_contact(icon, label) {
   return label != "" ? "\\contactplain{" icon_pdf_path(icon_name_for_link("", icon)) "}{" escape_latex(label) "}" : ""
