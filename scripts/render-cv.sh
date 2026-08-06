@@ -570,12 +570,24 @@ function render_contact_line(   row_count, extra_count, i, row, booking, out, le
   return out
 }
 function render_left_column() {
-  return "\\sectiontitle{Experience}\n\n" render_experience_entries() "\n\n\\sectiontitle{Education}\n\n" render_education()
+  return "\\sectiontitle{Experience}\n\n" render_experience_entries() \
+         "\n\n\\sectiontitle{Education}\n\n" render_education() \
+         render_languages_section()
 }
 function render_right_column() {
   summary_text = ""
-  for (i = 1; i <= summary_count; i++) summary_text = summary_text (summary_text != "" ? " " : "") linkify_latex_text(summary[i])
-  return "\\sectiontitle{Summary}\n\n{\\fontsize{7.2}{8.5}\\selectfont " summary_text "}\n\n\\sectiontitle{Key Achievements}\n\n" render_achievements() "\n\n\\sectiontitle{Skills}\n\n" render_skills_compact() render_languages_section()
+  for (i = 1; i <= summary_count; i++) {
+    summary_text = summary_text \
+      (summary_text != "" ? " " : "") \
+      linkify_latex_text(summary[i])
+  }
+
+  return "\\sectiontitle{Summary}\n\n" \
+         "{\\fontsize{7.2}{8.5}\\selectfont " summary_text "}" \
+         "\n\n\\sectiontitle{Key Achievements}\n\n" \
+         render_achievements() \
+         "\n\n\\sectiontitle{Skills}\n\n" \
+         render_skills_compact()
 }
 function render_two_column_body() {
   return "\\columnratio{0.63,0.37}\n\\setlength{\\columnsep}{0.045\\textwidth}\n\\begin{paracol}{2}\n\\RaggedRight\n" render_left_column() "\n\\switchcolumn\n\\RaggedRight\n" render_right_column() "\n\\end{paracol}"
